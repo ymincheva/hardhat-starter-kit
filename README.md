@@ -1,6 +1,6 @@
 # 🚀 Hardhat Starter Kit
 
-Basic hardhat project with some added configuration and goodies.
+Basic hardhat starter project kit with some added configuration and goodies.
 
 ## 💡 Some prerequisites
 
@@ -11,7 +11,7 @@ If you use another version, please use [n](https://github.com/tj/n) to manage.
 Highly suggest to use `hardhat-shorthand` package for easier development.
 
 ```shell
-$ npm install --global hardhat-shorthand
+npm install --global hardhat-shorthand
 ```
 
 More info in official [Hardhat docs](https://hardhat.org/hardhat-runner/docs/guides/command-line-completion).
@@ -19,7 +19,7 @@ More info in official [Hardhat docs](https://hardhat.org/hardhat-runner/docs/gui
 ## 🛠 Installation
 
 ```shell
-$ yarn
+yarn
 ```
 
 ## ⚙️ Config
@@ -27,7 +27,7 @@ $ yarn
 Copy the example `.env` file and add the needed credentials.
 
 ```shell
-$ cp example.env .env
+cp example.env .env
 ```
 
 Register at [Infura](https://www.infura.io/) ot [Alchemy](https://www.alchemy.com/) to get the `PROVIDER_URL`.
@@ -41,17 +41,17 @@ Register at [Etherscan](https://etherscan.io/) to get `ETHERSCAN_API_KEY`.
 To compile contracts:
 
 ```shell
-$ hh compile
+hh compile
 ```
 
 To run tests:
 
 ```shell
-$ hh test
+hh test
 ```
 
 To deploy contracts on Goerli testnet with script:
 
 ```shell
-$ hh run scripts/deploy.js --network goerli
+hh run scripts/deploy.js --network goerli
 ```
