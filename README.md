@@ -53,5 +53,5 @@ hh test
 To deploy contracts on Goerli testnet with script:
 
 ```shell
-hh run scripts/deploy.js --network goerli
+hh run scripts/deploy.js --network sepolia
 ```

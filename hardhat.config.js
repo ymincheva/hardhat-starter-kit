@@ -13,7 +13,7 @@ module.exports = {
     },
   },
   networks: {
-    goerli: {
+    sepolia: {
       url: process.env.PROVIDER_URL,
       accounts: [process.env.WALLET_PRIVATE_KEY],
     },
