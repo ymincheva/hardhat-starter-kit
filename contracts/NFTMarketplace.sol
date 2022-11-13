@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
+import '@openzeppelin/contracts/utils/Counters.sol';
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import 'hardhat/console.sol';
 
 contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
@@ -32,18 +32,15 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         bool forSale
     );
 
-    constructor() ERC721("NFTMarketplace", "METT") {}
+    constructor() ERC721('NFTMarketplace', 'METT') {}
 
     function createCollection(string memory collection) private {
-        require(bytes(collection).length != 0, "Collection cannot be empty");
+        require(bytes(collection).length != 0, 'Collection cannot be empty');
 
         _collectionIds.increment();
         uint256 newCollectionId = _collectionIds.current();
 
-        collectionLedger[newCollectionId] = Collection(
-            newCollectionId,
-            collection
-        );
+        collectionLedger[newCollectionId] = Collection(newCollectionId, collection);
 
         emit CollectionCreated(newCollectionId, collection);
     }
@@ -53,11 +50,23 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         uint256 collectionId,
         uint256 price
     ) private {
-        require(price > 0, "Price must be at least 1 wei");
+        require(price > 0, 'Price must be at least 1 wei');
 
         nftLedger[tokenId] = MarketNft(tokenId, price, collectionId, false);
         _transfer(msg.sender, address(this), tokenId);
         emit MarketNftCreated(tokenId, price, collectionId, false);
+    }
+
+    function createMarketSale(uint256 tokenId) public payable {
+        uint256 price = nftLedger[tokenId].price;
+
+        require(
+            msg.value == price,
+            'Please submit the asking price in order to complete the purchase'
+        );
+
+        nftLedger[tokenId].forSale = true;
+        _transfer(address(this), msg.sender, tokenId);
     }
 
     function safeMint(
@@ -70,10 +79,7 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
     }
 
     // The following functions are overrides required by Solidity.
-    function _burn(uint256 tokenId)
-        internal
-        override(ERC721, ERC721URIStorage)
-    {
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
 
