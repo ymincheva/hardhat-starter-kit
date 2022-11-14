@@ -2,12 +2,10 @@
 pragma solidity >=0.8.0;
 
 import '@openzeppelin/contracts/utils/Counters.sol';
-import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
-import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
-import 'hardhat/console.sol';
+import './MarketItem.sol';
 
-contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
+contract NFTMarketplace {
+    MarketItem private marketItem;
     using Counters for Counters.Counter;
     Counters.Counter private _collectionIds;
 
@@ -32,7 +30,9 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         bool forSale
     );
 
-    constructor() ERC721('NFTMarketplace', 'METT') {}
+    constructor(address _marketItemAddress) {
+        marketItem = MarketItem(_marketItemAddress);
+    }
 
     function createCollection(string memory collection) private {
         require(bytes(collection).length != 0, 'Collection cannot be empty');
@@ -57,7 +57,7 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         emit MarketNftCreated(tokenId, price, collectionId, false);
     }
 
-    function createMarketSale(uint256 tokenId) public payable {
+    function buyItem(uint256 tokenId) public payable {
         uint256 price = nftLedger[tokenId].price;
 
         require(
@@ -68,6 +68,21 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         nftLedger[tokenId].forSale = true;
         _transfer(address(this), msg.sender, tokenId);
     }
+
+    function listOfItemsByUserId(address to) public {}
+
+    /*     function withdrawAmount() external {
+        IERC721 nft = IERC721(msg.sender);
+
+        uint256 proceeds = nftLedger[msg.sender];
+        if (proceeds <= 0) {
+            //  revert NoProceeds();
+      }
+        nftLedger[msg.sender] = 0;
+
+       (bool success, ) = payable(msg.sender).call{ value: proceeds }('');
+        require(success, 'Transfer failed');
+    }  */
 
     function safeMint(
         address to,
@@ -89,8 +104,8 @@ contract NFTMarketplace is ERC721, ERC721URIStorage, Ownable {
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
+        //   require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+
         return super.tokenURI(tokenId);
     }
-
-    function doSomething() public {}
 }

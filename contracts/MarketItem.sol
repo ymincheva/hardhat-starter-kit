@@ -6,24 +6,14 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract MarketItem {
+contract MarketItem is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
     address payable owner;
 
-    constructor() {
+    constructor() ERC721('MarketItem', 'METT') {
         owner = payable(msg.sender);
-    }
-
-    function safeMint(
-        address to,
-        uint256 tokenId,
-        uint256 collectionId,
-        string memory uri
-    ) private {
-        //NFTMarketplace nFtMarketplace = NFTMarketplace(addr);
-        // nFtMarketplace.safeMint(address, tokenId, collectionId, uri);
     }
 
     /*    function createMarketItem(
@@ -58,4 +48,31 @@ contract MarketItem {
         payable(owner).transfer(listingPrice);
         payable(seller).transfer(msg.value);
     } */
+
+    function safeMint(
+        address to,
+        uint256 tokenId,
+        string memory uri
+    ) public onlyOwner {
+        // return token id
+
+        _safeMint(to, tokenId);
+        //  _setTokenURI(tokenId, uri);
+    }
+
+    // The following functions are overrides required by Solidity.
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        //   require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+
+        return super.tokenURI(tokenId);
+    }
 }
