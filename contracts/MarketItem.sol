@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.9;
 
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
@@ -11,20 +11,19 @@ contract MarketItem is ERC721, ERC721URIStorage, Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
-    address payable owner;
+    constructor() ERC721('MarketItem', 'MTK') {}
 
-    constructor() ERC721('MarketItem', 'METT') {
-        owner = payable(msg.sender);
-    }
-
-    function safeMintTest(address to, string memory uri) public onlyOwner returns (uint256) {
+    function safeMint(address to, string memory uri) public onlyOwner returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
+
         _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
         return tokenId;
     }
 
     // The following functions are overrides required by Solidity.
+
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
@@ -35,8 +34,6 @@ contract MarketItem is ERC721, ERC721URIStorage, Ownable {
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
-        //   require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
-
         return super.tokenURI(tokenId);
     }
 }

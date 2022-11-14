@@ -52,7 +52,7 @@ contract NFTMarketplace {
     ) private {
         require(price > 0, 'Price must be at least 1 wei');
 
-        uint256 tokenId = marketItem.safeMintTest(msg.sender, uri);
+        uint256 tokenId = marketItem.safeMint(msg.sender, uri);
 
         nftLedger[tokenId] = MarketNft(tokenId, price, collectionId, false);
 
