@@ -8,7 +8,8 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 
 contract MarketItem is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+
+    Counters.Counter private _tokenIdCounter;
 
     address payable owner;
 
@@ -16,48 +17,11 @@ contract MarketItem is ERC721, ERC721URIStorage, Ownable {
         owner = payable(msg.sender);
     }
 
-    /*    function createMarketItem(
-        uint256 tokenId,
-        uint256 collectionId,
-        uint256 price
-    ) private {
-        require(price > 0, "Price must be at least 1 wei");
-        require(
-            msg.value == listingPrice,
-            "Price must be equal to listing price"
-        );
-
-        idToMarketNft[tokenId] = MarketNft(tokenId, collectionId, price, false);
-
-        _transfer(msg.sender, address(this), tokenId);
-        emit MarketNftCreated(tokenId, collectionId, price, false);
-    } */
-
-    /*    function createMarketSale(uint256 tokenId) public payable {
-        uint256 price = idToMarketNft[tokenId].price;
-        address seller = idToMarketNft[tokenId].seller;
-        require(
-            msg.value == price,
-            "Please submit the asking price in order to complete the purchase"
-        );
-        idToMarketNft[tokenId].owner = payable(msg.sender);
-        idToMarketNft[tokenId].sold = true;
-        idToMarketNft[tokenId].seller = payable(address(0));
-        _itemsSold.increment();
-        _transfer(address(this), msg.sender, tokenId);
-        payable(owner).transfer(listingPrice);
-        payable(seller).transfer(msg.value);
-    } */
-
-    function safeMint(
-        address to,
-        uint256 tokenId,
-        string memory uri
-    ) public onlyOwner {
-        // return token id
-
+    function safeMintTest(address to, string memory uri) public onlyOwner returns (uint256) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        //  _setTokenURI(tokenId, uri);
+        return tokenId;
     }
 
     // The following functions are overrides required by Solidity.

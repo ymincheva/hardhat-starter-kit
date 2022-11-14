@@ -46,14 +46,16 @@ contract NFTMarketplace {
     }
 
     function createMarketItem(
-        uint256 tokenId,
         uint256 collectionId,
-        uint256 price
+        uint256 price,
+        string memory uri
     ) private {
         require(price > 0, 'Price must be at least 1 wei');
 
+        uint256 tokenId = marketItem.safeMintTest(msg.sender, uri);
+
         nftLedger[tokenId] = MarketNft(tokenId, price, collectionId, false);
-        _transfer(msg.sender, address(this), tokenId);
+
         emit MarketNftCreated(tokenId, price, collectionId, false);
     }
 
@@ -66,7 +68,7 @@ contract NFTMarketplace {
         );
 
         nftLedger[tokenId].forSale = true;
-        _transfer(address(this), msg.sender, tokenId);
+        //  _transfer(address(this), msg.sender, tokenId);
     }
 
     function listOfItemsByUserId(address to) public {}
@@ -84,28 +86,36 @@ contract NFTMarketplace {
         require(success, 'Transfer failed');
     }  */
 
-    function safeMint(
-        address to,
+    /*    function createMarketItem(
         uint256 tokenId,
-        string memory uri
-    ) public onlyOwner {
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-    }
+        uint256 collectionId,
+        uint256 price
+    ) private {
+        require(price > 0, "Price must be at least 1 wei");
+        require(
+            msg.value == listingPrice,
+            "Price must be equal to listing price"
+        );
 
-    // The following functions are overrides required by Solidity.
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
-    }
+        idToMarketNft[tokenId] = MarketNft(tokenId, collectionId, price, false);
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
-        //   require(_exists(tokenId), 'ERC721Metadata: URI query for nonexistent token');
+        _transfer(msg.sender, address(this), tokenId);
+        emit MarketNftCreated(tokenId, collectionId, price, false);
+    } */
 
-        return super.tokenURI(tokenId);
-    }
+    /*    function createMarketSale(uint256 tokenId) public payable {
+        uint256 price = idToMarketNft[tokenId].price;
+        address seller = idToMarketNft[tokenId].seller;
+        require(
+            msg.value == price,
+            "Please submit the asking price in order to complete the purchase"
+        );
+        idToMarketNft[tokenId].owner = payable(msg.sender);
+        idToMarketNft[tokenId].sold = true;
+        idToMarketNft[tokenId].seller = payable(address(0));
+        _itemsSold.increment();
+        _transfer(address(this), msg.sender, tokenId);
+        payable(owner).transfer(listingPrice);
+        payable(seller).transfer(msg.value);
+    } */
 }
