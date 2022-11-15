@@ -8,6 +8,8 @@ contract NFTMarketplace {
     MarketItem private marketItem;
     using Counters for Counters.Counter;
     Counters.Counter private _collectionIds;
+    uint256 public LISTING_FEE = 0.0001 ether;
+    address payable private _marketOwner;
 
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
@@ -35,6 +37,7 @@ contract NFTMarketplace {
 
     constructor(address _marketItemAddress) {
         marketItem = MarketItem(_marketItemAddress);
+        _marketOwner = _marketItemAddress;
     }
 
     function createCollection(string memory collection) public {
@@ -48,12 +51,16 @@ contract NFTMarketplace {
         emit CollectionCreated(newCollectionId, collection);
     }
 
-    function createMarketItem(uint256 collectionId, string memory uri) private {
-        uint256 tokenId = marketItem.safeMint(msg.sender, uri);
+    function createMarketItem(uint256 _collectionId, string memory _uri) private {
+        uint256 tokenId = marketItem.safeMint(msg.sender, _uri);
 
-        nftLedger[tokenId] = MarketNft(tokenId, 0, collectionId, false);
+        nftLedger[tokenId] = MarketNft(tokenId, 0, _collectionId, false);
 
-        emit MarketNftCreated(tokenId, 0, collectionId, false);
+        emit MarketNftCreated(tokenId, 0, _collectionId, false);
+    }
+
+    function setApproval(address _marketplaceContract) public {
+        marketItem.setApprovalForAll(_marketplaceContract, true);
     }
 
     function listItem(uint256 _tokenId, uint256 _price) private {
@@ -62,19 +69,22 @@ contract NFTMarketplace {
         nftLedger[_tokenId].price = _price;
     }
 
-    function buyItem(uint256 tokenId) public payable {
-        uint256 price = nftLedger[tokenId].price;
+    function buyItem(uint256 _tokenId) public payable {
+        uint256 price = nftLedger[_tokenId].price;
 
         require(
             msg.value == price,
             'Please submit the asking price in order to complete the purchase'
         );
 
-        nftLedger[tokenId].forSale = false;
-        marketItem.transferFrom(marketItem.ownerOf(tokenId), msg.sender, tokenId);
+        nftLedger[_tokenId].forSale = false;
+        marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
+
+        payable(msg.sender).transfer(msg.value);
+        _marketOwner.transfer(LISTING_FEE);
     }
 
-    function listOfItemsByUserId(address to) public {}
+    function listOfItemsByUserId(address _to) public {}
 
     /*  function withdrawAmount() external {
         IERC721 nft = IERC721(msg.sender);
