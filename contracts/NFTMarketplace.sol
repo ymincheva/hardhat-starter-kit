@@ -13,6 +13,7 @@ contract NFTMarketplace {
 
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
+    mapping(address => uint256) private credits;
 
     struct Collection {
         uint256 collectionId;
@@ -37,10 +38,10 @@ contract NFTMarketplace {
 
     constructor(address _marketItemAddress) {
         marketItem = MarketItem(_marketItemAddress);
-        _marketOwner = _marketItemAddress;
+        _marketOwner = payable(msg.sender);
     }
 
-    function createCollection(string memory collection) public {
+    function createCollection(string memory collection) public payable {
         require(bytes(collection).length != 0, 'Collection cannot be empty');
 
         _collectionIds.increment();
@@ -82,53 +83,24 @@ contract NFTMarketplace {
 
         payable(msg.sender).transfer(msg.value);
         _marketOwner.transfer(LISTING_FEE);
+
+        _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
     }
 
     function listOfItemsByUserId(address _to) public {}
 
-    /*  function withdrawAmount() external {
-        IERC721 nft = IERC721(msg.sender);
+    function _allowForPull(address receiver, uint256 amount) private {
+        credits[receiver] += amount;
+    }
 
-        uint256 proceeds = nftLedger[msg.sender];
-        if (proceeds <= 0) {
-            //  revert NoProceeds();
-        }
-        nftLedger[msg.sender] = 0;
+    function withdrawCredits() public {
+        uint256 amount = credits[msg.sender];
 
-        (bool success, ) = payable(msg.sender).call{ value: proceeds }('');
-        require(success, 'Transfer failed');
-    } */
+        require(amount > 0, 'There are no credits in this recipient address');
+        require(address(this).balance >= amount, 'There are no credits in this contract address');
 
-    /*    function createMarketItem(
-        uint256 tokenId,
-        uint256 collectionId,
-        uint256 price
-    ) private {
-        require(price > 0, "Price must be at least 1 wei");
-        require(
-            msg.value == listingPrice,
-            "Price must be equal to listing price"
-        );
+        credits[msg.sender] = 0;
 
-        idToMarketNft[tokenId] = MarketNft(tokenId, collectionId, price, false);
-
-        _transfer(msg.sender, address(this), tokenId);
-        emit MarketNftCreated(tokenId, collectionId, price, false);
-    } */
-
-    /*    function createMarketSale(uint256 tokenId) public payable {
-        uint256 price = idToMarketNft[tokenId].price;
-        address seller = idToMarketNft[tokenId].seller;
-        require(
-            msg.value == price,
-            "Please submit the asking price in order to complete the purchase"
-        );
-        idToMarketNft[tokenId].owner = payable(msg.sender);
-        idToMarketNft[tokenId].sold = true;
-        idToMarketNft[tokenId].seller = payable(address(0));
-        _itemsSold.increment();
-        _transfer(address(this), msg.sender, tokenId);
-        payable(owner).transfer(listingPrice);
-        payable(seller).transfer(msg.value);
-    } */
+        payable(msg.sender).transfer(amount);
+    }
 }
