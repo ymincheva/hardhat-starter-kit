@@ -6,10 +6,12 @@ async function main() {
 
   await marketItem.deployed();
 
+  console.log(`Contract is deployed to marketItem ${marketItem.address}`);
+
   const NFTMarketplace = await hre.ethers.getContractFactory('NFTMarketplace');
   const nftMarketplace = await NFTMarketplace.deploy(marketItem.address);
 
-  await nftMarketplace.deployed(marketItem.address);
+  await nftMarketplace.deployed();
 
   console.log(`Contract is deployed to ${nftMarketplace.address}`);
 }
