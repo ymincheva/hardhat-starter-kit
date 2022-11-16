@@ -41,7 +41,7 @@ contract NFTMarketplace {
         _marketOwner = payable(msg.sender);
     }
 
-    function createCollection(string memory collection) public payable {
+    function createCollection(string memory collection) public {
         require(bytes(collection).length != 0, 'Collection cannot be empty');
 
         _collectionIds.increment();
@@ -52,7 +52,7 @@ contract NFTMarketplace {
         emit CollectionCreated(newCollectionId, collection);
     }
 
-    function createMarketItem(uint256 _collectionId, string memory _uri) private {
+    function createMarketItem(uint256 _collectionId, string memory _uri) public {
         uint256 tokenId = marketItem.safeMint(msg.sender, _uri);
 
         nftLedger[tokenId] = MarketNft(tokenId, 0, _collectionId, false);
@@ -78,7 +78,7 @@ contract NFTMarketplace {
             'Please submit the asking price in order to complete the purchase'
         );
 
-        nftLedger[_tokenId].forSale = false;
+        nftLedger[_tokenId].forSale = true;
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
         payable(msg.sender).transfer(msg.value);
@@ -102,5 +102,20 @@ contract NFTMarketplace {
         credits[msg.sender] = 0;
 
         payable(msg.sender).transfer(amount);
+    }
+
+    function cancelItem(uint256 _tokenId) public payable {
+        uint256 price = nftLedger[_tokenId].price;
+
+        require(
+            msg.value == price,
+            'Please submit the asking price in order to complete the purchase'
+        );
+
+        nftLedger[_tokenId].forSale = false;
+        marketItem.transferFrom(msg.sender, marketItem.ownerOf(_tokenId), _tokenId);
+
+        payable(marketItem.ownerOf(_tokenId)).transfer((msg.value + LISTING_FEE));
+        _allowForPull(marketItem.ownerOf(_tokenId), (msg.value + LISTING_FEE));
     }
 }
