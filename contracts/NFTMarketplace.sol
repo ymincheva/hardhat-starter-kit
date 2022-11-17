@@ -10,14 +10,18 @@ contract NFTMarketplace {
     Counters.Counter private _collectionIds;
     uint256 public LISTING_FEE = 0.0001 ether;
     address payable private _marketOwner;
+    uint256[] public collectionIds;
+    uint256 public offerCount;
 
+    mapping(uint256 => Offer) public offers;
+    mapping(address => uint256) public userFunds;
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
     mapping(address => uint256) private credits;
 
     struct Collection {
         uint256 collectionId;
-        string seller;
+        string collectionName;
     }
 
     struct MarketNft {
@@ -27,7 +31,29 @@ contract NFTMarketplace {
         bool forSale;
     }
 
-    event CollectionCreated(uint256 indexed collectionId, string seller);
+    struct Offer {
+        uint256 offerId;
+        uint256 id;
+        address user;
+        uint256 price;
+        bool fulfilled;
+        bool cancelled;
+    }
+
+    event OfferListed(
+        uint256 offerId,
+        uint256 id,
+        address user,
+        uint256 price,
+        bool fulfilled,
+        bool cancelled
+    );
+
+    event OfferFilled(uint256 offerId, uint256 id, address newOwner);
+    event OfferCancelled(uint256 offerId, uint256 id, address owner);
+    event ClaimFunds(address user, uint256 amount);
+
+    event CollectionCreated(uint256 indexed collectionId, string collectionName);
 
     event MarketNftCreated(
         uint256 indexed tokenId,
@@ -41,6 +67,16 @@ contract NFTMarketplace {
         _marketOwner = payable(msg.sender);
     }
 
+    modifier HasTransferApproval(uint256 _tokenId) {
+        require(marketItem.getApproved(_tokenId) == address(this), 'Market is not approved');
+        _;
+    }
+
+    modifier IsForSale(uint256 _tokenId) {
+        require(!nftLedger[_tokenId].forSale, 'Item is already sold');
+        _;
+    }
+
     function createCollection(string memory collection) public {
         require(bytes(collection).length != 0, 'Collection cannot be empty');
 
@@ -49,6 +85,7 @@ contract NFTMarketplace {
 
         collectionLedger[newCollectionId] = Collection(newCollectionId, collection);
 
+        collectionIds.push(newCollectionId);
         emit CollectionCreated(newCollectionId, collection);
     }
 
@@ -70,13 +107,15 @@ contract NFTMarketplace {
         nftLedger[_tokenId].price = _price;
     }
 
-    function buyItem(uint256 _tokenId) public payable {
+    function buyItem(uint256 _tokenId)
+        external
+        payable
+        IsForSale(_tokenId)
+        HasTransferApproval(_tokenId)
+    {
         uint256 price = nftLedger[_tokenId].price;
 
-        require(
-            msg.value == price,
-            'Please submit the asking price in order to complete the purchase'
-        );
+        require(msg.value >= price, 'Not enough funds sent');
 
         nftLedger[_tokenId].forSale = true;
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
@@ -86,8 +125,6 @@ contract NFTMarketplace {
 
         _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
     }
-
-    function listOfItemsByUserId(address _to) public {}
 
     function _allowForPull(address receiver, uint256 amount) private {
         credits[receiver] += amount;
@@ -117,5 +154,47 @@ contract NFTMarketplace {
 
         payable(marketItem.ownerOf(_tokenId)).transfer((msg.value + LISTING_FEE));
         _allowForPull(marketItem.ownerOf(_tokenId), (msg.value + LISTING_FEE));
+    }
+
+    function getItem(uint256 tokenId) public view returns (MarketNft memory) {
+        return nftLedger[tokenId];
+    }
+
+    function makeOffer(uint256 _id, uint256 _price) public {
+        marketItem.transferFrom(msg.sender, address(this), _id);
+        offerCount++;
+        offers[offerCount] = Offer(offerCount, _id, msg.sender, _price, false, false);
+        emit OfferListed(offerCount, _id, msg.sender, _price, false, false);
+    }
+
+    function fillOffer(uint256 _offerId) public payable {
+        Offer storage _offer = offers[_offerId];
+        require(_offer.offerId == _offerId, 'The offer must exist');
+        require(_offer.user != msg.sender, 'The owner of the offer cannot fill it');
+        require(!_offer.fulfilled, 'An offer cannot be fulfilled twice');
+        require(!_offer.cancelled, 'A cancelled offer cannot be fulfilled');
+        require(msg.value == _offer.price, 'The ETH amount should match with the NFT Price');
+        marketItem.transferFrom(address(this), msg.sender, _offer.id);
+        _offer.fulfilled = true;
+        userFunds[_offer.user] += msg.value;
+        emit OfferFilled(_offerId, _offer.id, msg.sender);
+    }
+
+    function cancelOffer(uint256 _offerId) public {
+        Offer storage _offer = offers[_offerId];
+        require(_offer.offerId == _offerId, 'The offer must exist');
+        require(_offer.user == msg.sender, 'The offer can only be canceled by the owner');
+        require(_offer.fulfilled == false, 'A fulfilled offer cannot be cancelled');
+        require(_offer.cancelled == false, 'An offer cannot be cancelled twice');
+        marketItem.transferFrom(address(this), msg.sender, _offer.id);
+        _offer.cancelled = true;
+        emit OfferCancelled(_offerId, _offer.id, msg.sender);
+    }
+
+    function claimFunds() public {
+        require(userFunds[msg.sender] > 0, 'This user has no funds to be claimed');
+        payable(msg.sender).transfer(userFunds[msg.sender]);
+        emit ClaimFunds(msg.sender, userFunds[msg.sender]);
+        userFunds[msg.sender] = 0;
     }
 }
