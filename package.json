@@ -8,21 +8,22 @@
     "@ethersproject/providers": "^5.4.7",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
-    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-etherscan": "^3.0.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.7",
+    "@openzeppelin/test-helpers": "^0.5.16",
     "@typechain/ethers-v5": "^10.1.0",
     "@typechain/hardhat": "^6.1.2",
     "chai": "^4.2.0",
     "dotenv": "^16.0.3",
     "ethers": "^5.4.7",
     "hardhat": "^2.12.2",
-    "hardhat-gas-reporter": "^1.0.8",
-    "solidity-coverage": "^0.8.0",
+    "hardhat-gas-reporter": "^1.0.2",
+    "solidity-coverage": "^0.7.22",
     "typechain": "^8.1.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.8.0",
-    "@openzeppelin/test-helpers": "^0.5.16"
+    "@openzeppelin/contracts": "^4.8.0"
   }
 }

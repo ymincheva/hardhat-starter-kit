@@ -9,7 +9,7 @@ contract NFTMarketplace {
     using Counters for Counters.Counter;
     Counters.Counter private _collectionIds;
     uint256 public LISTING_FEE = 0.0001 ether;
-    address payable private _marketOwner;
+    address payable public owner;
     uint256[] public collectionIds;
     uint256 public offerCount;
 
@@ -64,7 +64,7 @@ contract NFTMarketplace {
 
     constructor(address _marketItemAddress) {
         marketItem = MarketItem(_marketItemAddress);
-        _marketOwner = payable(msg.sender);
+        owner = payable(msg.sender);
     }
 
     modifier HasTransferApproval(uint256 _tokenId) {
@@ -121,7 +121,7 @@ contract NFTMarketplace {
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
         payable(msg.sender).transfer(msg.value);
-        _marketOwner.transfer(LISTING_FEE);
+        owner.transfer(LISTING_FEE);
 
         _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
     }
