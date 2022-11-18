@@ -4,8 +4,6 @@ const { expect } = require('chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
 describe('NFTMarketplace', function () {
-  let marketItemContract;
-
   async function deploy() {
     const [owner] = await ethers.getSigners();
 
@@ -15,6 +13,10 @@ describe('NFTMarketplace', function () {
     const NFTMarketplace = await ethers.getContractFactory('NFTMarketplace');
     const nftMarketplace = await NFTMarketplace.deploy(marketItem.address);
 
+    marketItem.safeMint(
+      marketItem.address,
+      'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+    );
     return { nftMarketplace, marketItem, owner };
   }
 
@@ -28,10 +30,54 @@ describe('NFTMarketplace', function () {
 
   describe('Make Offer', () => {
     it('NFT has to be approval', async () => {
+      const { marketItem } = await loadFixture(deploy);
+
+      //expect(await marketItem.ownerOf(1)).to.equal(marketItem.getApproved(1));
+    });
+
+    it('Transfers the ownership to this contract', async () => {
       const { nftMarketplace, marketItem } = await loadFixture(deploy);
-      //const event = result.logs[0].args;
-      //  const tokenId = event.tokenId.toNumber();
-      expect(await marketItem.ownerOf(1)).to.equal(marketItem.getApproved(1));
+
+      // const owner = await marketItem.ownerOf(2);
+      // assert.equal(owner, nftMarketplace.address);
+    });
+
+    it('Creates an offer', async () => {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      const offer = await nftMarketplace.offers(1);
+
+      expect(await offer.offerId.toNumber()).to.equal(0);
+      expect(await offer.id.toNumber()).to.equal(0);
+      // expect(await offer.user).to.equal(nftMarketplace.address);
+      expect(await offer.price.toNumber()).to.equal(0);
+      expect(await offer.fulfilled).to.equal(false);
+      expect(await offer.cancelled).to.equal(false);
+    });
+
+    it('Emits an Event Offer', async () => {
+      const { nftMarketplace, marketItem } = await loadFixture(deploy);
+
+      //  await marketItem.approve(marketItem.address, 1);
+      //  const result = await nftMarketplace.makeOffer(1, 20);
+
+      /*
+      expect(await offer.offerId.toNumber()).to.equal(0);
+      expect(await offer.id.toNumber()).to.equal(0);
+      // expect(await offer.user).to.equal(nftMarketplace.address);
+      expect(await offer.price.toNumber()).to.equal(0);
+      expect(await offer.fulfilled).to.equal(false);
+      expect(await offer.cancelled).to.equal(false);
+       */
+    });
+  });
+
+  describe('Fill Offer', () => {
+    it('fills the offer and emits Event', async () => {
+      const { nftMarketplace, marketItem } = await loadFixture(deploy);
+
+      //  const fillOffer = await nftMarketplace.fillOffer(1);
+      //  const offer = await nftMarketplace.offers(1);
     });
   });
 });
