@@ -80,4 +80,33 @@ describe('NFTMarketplace', function () {
       //  const offer = await nftMarketplace.offers(1);
     });
   });
+
+  describe('Events', function () {
+    it('Should emit an event on CollectionCreated', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await expect(nftMarketplace.createCollection('polar bear'))
+        .to.emit(nftMarketplace, 'CollectionCreated')
+        .withArgs(anyValue, 'polar bear');
+    });
+  });
+
+  describe('Events', function () {
+    it('Should emit an event on MarketNftCreated', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await expect(
+        nftMarketplace.createMarketItem(
+          1,
+          'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+        ),
+      )
+        .to.emit(nftMarketplace, 'MarketNftCreated')
+        .withArgs(
+          anyValue,
+          'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+          anyValue,
+        );
+    });
+  });
 });
