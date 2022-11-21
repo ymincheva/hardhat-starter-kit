@@ -13,10 +13,10 @@ describe('NFTMarketplace', function () {
     const NFTMarketplace = await ethers.getContractFactory('NFTMarketplace');
     const nftMarketplace = await NFTMarketplace.deploy(marketItem.address);
 
-    marketItem.safeMint(
+    /*   marketItem.safeMint(
       marketItem.address,
       'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-    );
+    ); */
     return { nftMarketplace, marketItem, owner };
   }
 
@@ -30,10 +30,42 @@ describe('NFTMarketplace', function () {
 
   describe('Create collection', function () {
     it('Should set the right collection name ', async function () {
-      const { nftMarketplace, owner } = await loadFixture(deploy);
+      const { nftMarketplace } = await loadFixture(deploy);
 
       await nftMarketplace.createCollection('bear');
       expect(await nftMarketplace.collectionLedger(1)).to.equal('bear');
+    });
+  });
+
+  describe('Create nft item', function () {
+    it('Should set the right collection id and uri ', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(
+        1,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      expect(await nftLedger.collectionId).to.equal(1);
+    });
+  });
+
+  describe('Buy nft item', function () {
+    it('Should set the right token id ', async function () {
+      const { nftMarketplace, marketItem } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(
+        1,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+
+      await marketItem.approve(nftMarketplace.address, 0);
+
+      await nftMarketplace.buyItem(0);
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      expect(await nftLedger.tokenId).to.equal(0);
     });
   });
 

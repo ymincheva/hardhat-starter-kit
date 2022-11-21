@@ -92,14 +92,14 @@ contract NFTMarketplace {
     function createMarketItem(uint256 _collectionId, string memory _uri) external {
         uint256 tokenId = marketItem.safeMint(msg.sender, _uri);
 
-        nftLedger[tokenId] = MarketNft(tokenId, 0, _collectionId, false);
+        nftLedger[tokenId] = MarketNft(tokenId, _collectionId, 0, false);
 
         nftLedgerIds.push(tokenId);
         emit MarketNftCreated(tokenId, 0, _collectionId, false);
     }
 
-    function setApproval(address _marketplaceContract) public {
-        marketItem.setApprovalForAll(_marketplaceContract, true);
+    function setApproval(address _marketplaceContract, uint256 _tokenId) external {
+        marketItem.approve(_marketplaceContract, _tokenId);
     }
 
     function listItem(uint256 _tokenId, uint256 _price) private {
@@ -121,10 +121,10 @@ contract NFTMarketplace {
         nftLedger[_tokenId].forSale = true;
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
-        payable(msg.sender).transfer(msg.value);
-        owner.transfer(LISTING_FEE);
+        //  payable(msg.sender).transfer(msg.value);
+        //   owner.transfer(LISTING_FEE);
 
-        _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
+        //  _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
     }
 
     function _allowForPull(address receiver, uint256 amount) private {
