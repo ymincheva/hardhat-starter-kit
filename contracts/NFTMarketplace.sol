@@ -94,6 +94,7 @@ contract NFTMarketplace {
 
         nftLedger[tokenId] = MarketNft(tokenId, 0, _collectionId, false);
 
+        nftLedgerIds.push(tokenId);
         emit MarketNftCreated(tokenId, 0, _collectionId, false);
     }
 

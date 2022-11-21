@@ -29,12 +29,11 @@ describe('NFTMarketplace', function () {
   });
 
   describe('Create collection', function () {
-    it('Should set collection name', async function () {
+    it('Should set the right collection name ', async function () {
       const { nftMarketplace, owner } = await loadFixture(deploy);
 
-      await nftMarketplace.createCollection('polar bear');
-      console.log('----------------np', await nftMarketplace.collectionLedger(0));
-      expect(await nftMarketplace.collectionLedger(0).collectionName).to.equal('polar bear');
+      await nftMarketplace.createCollection('bear');
+      expect(await nftMarketplace.collectionLedger(1)).to.equal('bear');
     });
   });
 
