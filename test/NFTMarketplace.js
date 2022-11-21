@@ -28,11 +28,21 @@ describe('NFTMarketplace', function () {
     });
   });
 
-  describe('Make Offer', () => {
+  describe('Create collection', function () {
+    it('Should set collection name', async function () {
+      const { nftMarketplace, owner } = await loadFixture(deploy);
+
+      await nftMarketplace.createCollection('polar bear');
+      console.log('----------------np', await nftMarketplace.collectionLedger(0));
+      expect(await nftMarketplace.collectionLedger(0).collectionName).to.equal('polar bear');
+    });
+  });
+
+  /*  describe('Make Offer', () => {
     it('NFT has to be approval', async () => {
       const { marketItem } = await loadFixture(deploy);
 
-      //expect(await marketItem.ownerOf(1)).to.equal(marketItem.getApproved(1));
+      //  expect(await marketItem.ownerOf(1)).to.equal(marketItem.getApproved(1));
     });
 
     it('Transfers the ownership to this contract', async () => {
@@ -54,14 +64,14 @@ describe('NFTMarketplace', function () {
       expect(await offer.fulfilled).to.equal(false);
       expect(await offer.cancelled).to.equal(false);
     });
+ */
+  it('Emits an Event Offer', async () => {
+    const { nftMarketplace, marketItem } = await loadFixture(deploy);
 
-    it('Emits an Event Offer', async () => {
-      const { nftMarketplace, marketItem } = await loadFixture(deploy);
+    //  await marketItem.approve(marketItem.address, 1);
+    //  const result = await nftMarketplace.makeOffer(1, 20);
 
-      //  await marketItem.approve(marketItem.address, 1);
-      //  const result = await nftMarketplace.makeOffer(1, 20);
-
-      /*
+    /*
       expect(await offer.offerId.toNumber()).to.equal(0);
       expect(await offer.id.toNumber()).to.equal(0);
       // expect(await offer.user).to.equal(nftMarketplace.address);
@@ -69,29 +79,41 @@ describe('NFTMarketplace', function () {
       expect(await offer.fulfilled).to.equal(false);
       expect(await offer.cancelled).to.equal(false);
        */
-    });
   });
+});
 
-  describe('Fill Offer', () => {
+/*   describe('Fill Offer', () => {
     it('fills the offer and emits Event', async () => {
       const { nftMarketplace, marketItem } = await loadFixture(deploy);
 
       //  const fillOffer = await nftMarketplace.fillOffer(1);
       //  const offer = await nftMarketplace.offers(1);
     });
-  });
+  }); */
 
-  describe('Events', function () {
-    it('Should emit an event on CollectionCreated', async function () {
+/* describe('Events', function () {
+  it('Should emit an event on CollectionCreated', async function () {
+    const { nftMarketplace } = await loadFixture(deploy);
+
+    await expect(nftMarketplace.createCollection('polar bear'))
+      .to.emit(nftMarketplace, 'CollectionCreated')
+      .withArgs(anyValue, 'polar bear');
+  }); */
+
+/*     it('Should argument names to be the same', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
       await expect(nftMarketplace.createCollection('polar bear'))
         .to.emit(nftMarketplace, 'CollectionCreated')
-        .withArgs(anyValue, 'polar bear');
-    });
-  });
+        .withNamedArgs({
+          from: wallet.address,
+          to: walletTo.address,
+          collection: 'polar bear',
+        });
+    }); */
+//});
 
-  describe('Events', function () {
+/*   describe('Events', function () {
     it('Should emit an event on MarketNftCreated', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
@@ -108,5 +130,5 @@ describe('NFTMarketplace', function () {
           anyValue,
         );
     });
-  });
-});
+  }); 
+});*/

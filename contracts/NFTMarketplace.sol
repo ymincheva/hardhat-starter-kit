@@ -11,6 +11,7 @@ contract NFTMarketplace {
     uint256 public LISTING_FEE = 0.0001 ether;
     address payable public owner;
     uint256[] public collectionIds;
+    uint256[] public nftLedgerIds;
     uint256 public offerCount;
 
     mapping(uint256 => Offer) public offers;
@@ -20,7 +21,6 @@ contract NFTMarketplace {
     mapping(address => uint256) private credits;
 
     struct Collection {
-        uint256 collectionId;
         string collectionName;
     }
 
@@ -77,19 +77,19 @@ contract NFTMarketplace {
         _;
     }
 
-    function createCollection(string memory collection) public {
-        require(bytes(collection).length != 0, 'Collection cannot be empty');
+    function createCollection(string memory _collectionName) external {
+        require(bytes(_collectionName).length != 0, 'Collection cannot be empty');
 
         _collectionIds.increment();
         uint256 newCollectionId = _collectionIds.current();
 
-        collectionLedger[newCollectionId] = Collection(newCollectionId, collection);
+        collectionLedger[newCollectionId] = Collection(_collectionName);
 
         collectionIds.push(newCollectionId);
-        emit CollectionCreated(newCollectionId, collection);
+        emit CollectionCreated(newCollectionId, _collectionName);
     }
 
-    function createMarketItem(uint256 _collectionId, string memory _uri) public {
+    function createMarketItem(uint256 _collectionId, string memory _uri) external {
         uint256 tokenId = marketItem.safeMint(msg.sender, _uri);
 
         nftLedger[tokenId] = MarketNft(tokenId, 0, _collectionId, false);
@@ -102,7 +102,7 @@ contract NFTMarketplace {
     }
 
     function listItem(uint256 _tokenId, uint256 _price) private {
-        // - approval
+        // - approval FE marketItem
         nftLedger[_tokenId].forSale = true;
         nftLedger[_tokenId].price = _price;
     }
@@ -154,10 +154,6 @@ contract NFTMarketplace {
 
         payable(marketItem.ownerOf(_tokenId)).transfer((msg.value + LISTING_FEE));
         _allowForPull(marketItem.ownerOf(_tokenId), (msg.value + LISTING_FEE));
-    }
-
-    function getItem(uint256 tokenId) public view returns (MarketNft memory) {
-        return nftLedger[tokenId];
     }
 
     function makeOffer(uint256 _id, uint256 _price) public {
