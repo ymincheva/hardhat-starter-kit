@@ -10,6 +10,7 @@ contract MarketItem is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
+    uint256[] public tokenIds;
 
     constructor() ERC721('MarketItem', 'MTK') {}
 
@@ -19,6 +20,7 @@ contract MarketItem is ERC721, ERC721URIStorage, Ownable {
 
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
+        tokenIds.push(tokenId);
         return tokenId;
     }
 

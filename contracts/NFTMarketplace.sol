@@ -19,6 +19,7 @@ contract NFTMarketplace {
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
     mapping(address => uint256) private credits;
+    mapping(address => uint256) private marketFee;
 
     struct Collection {
         string collectionName;
@@ -95,7 +96,7 @@ contract NFTMarketplace {
         nftLedger[tokenId] = MarketNft(tokenId, _collectionId, 0, false);
 
         nftLedgerIds.push(tokenId);
-        emit MarketNftCreated(tokenId, 0, _collectionId, false);
+        emit MarketNftCreated(tokenId, _collectionId, 0, false);
     }
 
     function setApproval(address _marketplaceContract, uint256 _tokenId) external {
@@ -121,40 +122,15 @@ contract NFTMarketplace {
         nftLedger[_tokenId].forSale = true;
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
-        //  payable(msg.sender).transfer(msg.value);
-        //   owner.transfer(LISTING_FEE);
+        payable(msg.sender).transfer(msg.value);
 
-        //  _allowForPull(marketItem.ownerOf(_tokenId), (msg.value - LISTING_FEE));
+        marketFee[marketItem.ownerOf(_tokenId)] += LISTING_FEE;
+        credits[marketItem.ownerOf(_tokenId)] += msg.value;
     }
 
-    function _allowForPull(address receiver, uint256 amount) private {
-        credits[receiver] += amount;
-    }
-
-    function withdrawCredits() public {
-        uint256 amount = credits[msg.sender];
-
-        require(amount > 0, 'There are no credits in this recipient address');
-        require(address(this).balance >= amount, 'There are no credits in this contract address');
-
-        credits[msg.sender] = 0;
-
-        payable(msg.sender).transfer(amount);
-    }
-
-    function cancelItem(uint256 _tokenId) public payable {
-        uint256 price = nftLedger[_tokenId].price;
-
-        require(
-            msg.value == price,
-            'Please submit the asking price in order to complete the purchase'
-        );
-
+    function cancelItem(uint256 _tokenId) external {
         nftLedger[_tokenId].forSale = false;
-        marketItem.transferFrom(msg.sender, marketItem.ownerOf(_tokenId), _tokenId);
-
-        payable(marketItem.ownerOf(_tokenId)).transfer((msg.value + LISTING_FEE));
-        _allowForPull(marketItem.ownerOf(_tokenId), (msg.value + LISTING_FEE));
+        nftLedger[_tokenId].price = 0;
     }
 
     function makeOffer(uint256 _id, uint256 _price) public {
