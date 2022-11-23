@@ -14,7 +14,7 @@ contract NFTMarketplace {
     uint256[] public nftLedgerIds;
     uint256 public offerCount;
 
-    mapping(uint256 => Offer) public offers;
+    // mapping(uint256 => Offer) public offers;
     mapping(address => uint256) public userFunds;
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
@@ -32,7 +32,7 @@ contract NFTMarketplace {
         bool forSale;
     }
 
-    struct Offer {
+    /*   struct Offer {
         uint256 offerId;
         uint256 id;
         address user;
@@ -48,11 +48,11 @@ contract NFTMarketplace {
         uint256 price,
         bool fulfilled,
         bool cancelled
-    );
+    ); */
 
-    event OfferFilled(uint256 offerId, uint256 id, address newOwner);
+    /*   event OfferFilled(uint256 offerId, uint256 id, address newOwner);
     event OfferCancelled(uint256 offerId, uint256 id, address owner);
-    event ClaimFunds(address user, uint256 amount);
+    event ClaimFunds(address user, uint256 amount); */
 
     event CollectionCreated(uint256 indexed collectionId, string collectionName);
 
@@ -103,9 +103,9 @@ contract NFTMarketplace {
         marketItem.approve(_marketplaceContract, _tokenId);
     }
 
-    function listItem(uint256 _tokenId, uint256 _price) private {
-        // - approval FE marketItem
-        nftLedger[_tokenId].forSale = true;
+    function listItem(uint256 _tokenId, uint256 _price) external {
+        // - approval FE
+        // nftLedger[_tokenId].forSale = true;
         nftLedger[_tokenId].price = _price;
     }
 
@@ -118,8 +118,13 @@ contract NFTMarketplace {
         uint256 price = nftLedger[_tokenId].price;
 
         require(msg.value >= price, 'Not enough funds sent');
+        require(msg.sender == marketItem.ownerOf(_tokenId), 'Sender has to the owner of the NFT');
 
         nftLedger[_tokenId].forSale = true;
+
+        /// address payable ownerNft = payable(marketItem.ownerOf(_tokenId));
+        // ownerNft.transfer((msg.value - LISTING_FEE));
+
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
         payable(msg.sender).transfer(msg.value);
@@ -133,7 +138,7 @@ contract NFTMarketplace {
         nftLedger[_tokenId].price = 0;
     }
 
-    function makeOffer(uint256 _id, uint256 _price) public {
+    /*  function makeOffer(uint256 _id, uint256 _price) public {
         marketItem.transferFrom(msg.sender, address(this), _id);
         offerCount++;
         offers[offerCount] = Offer(offerCount, _id, msg.sender, _price, false, false);
@@ -169,5 +174,5 @@ contract NFTMarketplace {
         payable(msg.sender).transfer(userFunds[msg.sender]);
         emit ClaimFunds(msg.sender, userFunds[msg.sender]);
         userFunds[msg.sender] = 0;
-    }
+    } */
 }

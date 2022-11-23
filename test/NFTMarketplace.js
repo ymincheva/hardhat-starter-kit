@@ -31,6 +31,12 @@ describe('NFTMarketplace', function () {
       await nftMarketplace.createCollection('bear');
       expect(await nftMarketplace.collectionLedger(1)).to.equal('bear');
     });
+    it('Should set collection name ', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await nftMarketplace.createCollection('bear');
+      expect(await nftMarketplace.collectionLedger(1)).length.to.above(0);
+    });
   });
 
   describe('Create nft item', function () {
@@ -55,6 +61,32 @@ describe('NFTMarketplace', function () {
       const nftLedger = await nftMarketplace.nftLedger(0);
 
       expect(await nftLedger.forSale).to.equal(false);
+    });
+    it('Should set the right price ', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(
+        1,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      expect(await nftLedger.price).to.equal(0);
+    });
+    it('Should set the right token id  ', async function () {
+      const { nftMarketplace, marketItem, owner } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(
+        1,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+      const tokenId = await marketItem.safeMint(
+        owner.address,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      // expect(nftLedger.tokenId).to.equal(tokenId);
     });
   });
 
@@ -91,7 +123,7 @@ describe('NFTMarketplace', function () {
       expect(await nftLedger.forSale).to.equal(true);
     });
 
-    /*  it('Should set the right price ', async function () {
+    it('Should set the right price ', async function () {
       const { nftMarketplace, marketItem } = await loadFixture(deploy);
 
       await nftMarketplace.createMarketItem(
@@ -101,11 +133,25 @@ describe('NFTMarketplace', function () {
 
       await marketItem.approve(nftMarketplace.address, 0);
 
+      await nftMarketplace.listItem(0, 0);
       await nftMarketplace.buyItem(0);
       const nftLedger = await nftMarketplace.nftLedger(0);
 
-      expect(await nftLedger.price).to.equal(true);
-    }); */
+      expect(await nftLedger.price).to.equal(0);
+    });
+
+    it('Should item be approved', async function () {
+      const { nftMarketplace, marketItem, owner } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(
+        1,
+        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
+      );
+
+      await marketItem.approve(nftMarketplace.address, 0);
+
+      expect(await marketItem.getApproved(0)).to.equal(nftMarketplace.address);
+    });
   });
 
   describe('Events', function () {
