@@ -74,7 +74,7 @@ contract NFTMarketplace {
     }
 
     modifier IsForSale(uint256 _tokenId) {
-        require(!nftLedger[_tokenId].forSale, 'Item is already sold');
+        require(nftLedger[_tokenId].forSale, 'Item is already sold');
         _;
     }
 
@@ -105,7 +105,7 @@ contract NFTMarketplace {
 
     function listItem(uint256 _tokenId, uint256 _price) external {
         // - approval FE
-        // nftLedger[_tokenId].forSale = true;
+        nftLedger[_tokenId].forSale = true;
         nftLedger[_tokenId].price = _price;
     }
 
@@ -118,12 +118,15 @@ contract NFTMarketplace {
         uint256 price = nftLedger[_tokenId].price;
 
         require(msg.value >= price, 'Not enough funds sent');
-        require(msg.sender == marketItem.ownerOf(_tokenId), 'Sender has to the owner of the NFT');
+        require(
+            msg.sender != marketItem.ownerOf(_tokenId),
+            'Sender has not to the owner of the NFT'
+        );
 
         nftLedger[_tokenId].forSale = true;
 
-        /// address payable ownerNft = payable(marketItem.ownerOf(_tokenId));
-        // ownerNft.transfer((msg.value - LISTING_FEE));
+        address payable ownerNft = payable(marketItem.ownerOf(_tokenId));
+        ownerNft.transfer((msg.value - LISTING_FEE));
 
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
