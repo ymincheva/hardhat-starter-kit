@@ -68,12 +68,12 @@ contract NFTMarketplace {
     }
 
     modifier HasTransferApproval(uint256 _tokenId) {
-        require(marketItem.getApproved(_tokenId) == address(this), 'Market is not approved');
+        require(marketItem.getApproved(_tokenId) == address(this), 'Item is not approved');
         _;
     }
 
     modifier IsForSale(uint256 _tokenId) {
-        require(nftLedger[_tokenId].forSale, 'Item is already sold');
+        require(nftLedger[_tokenId].forSale == true, 'Item is already listed to sale');
         _;
     }
 
@@ -102,18 +102,21 @@ contract NFTMarketplace {
         marketItem.approve(_marketplaceContract, _tokenId);
     }
 
-    function listItem(uint256 _tokenId, uint256 _price) external {
+    function listItem(uint256 _tokenId, uint256 _price)
+        external
+        IsForSale(_tokenId)
+        HasTransferApproval(_tokenId)
+    {
         // - approval FE
+
+        require(marketItem.ownerOf(_tokenId) != address(this), 'Only owner can list NFT');
+        require(marketItem.ownerOf(_tokenId) == address(0), 'Item has to be exist');
+
         nftLedger[_tokenId].forSale = true;
         nftLedger[_tokenId].price = _price;
     }
 
-    function buyItem(uint256 _tokenId)
-        external
-        payable
-        IsForSale(_tokenId)
-        HasTransferApproval(_tokenId)
-    {
+    function buyItem(uint256 _tokenId) external payable {
         uint256 price = nftLedger[_tokenId].price;
 
         require(msg.value >= price, 'Not enough funds sent');
@@ -133,8 +136,18 @@ contract NFTMarketplace {
     }
 
     function cancelItem(uint256 _tokenId) external {
+        require(marketItem.ownerOf(_tokenId) != address(this), 'Only owner can cancel Nft');
+
         nftLedger[_tokenId].forSale = false;
         nftLedger[_tokenId].price = 0;
+    }
+
+    function getNftIdsCount() public view returns (uint256) {
+        return nftLedgerIds.length;
+    }
+
+    function getCollectionIdsCount() public view returns (uint256) {
+        return collectionIds.length;
     }
 
     /*  function makeOffer(uint256 _id, uint256 _price) public {
