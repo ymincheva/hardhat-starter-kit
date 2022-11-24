@@ -18,7 +18,6 @@ contract NFTMarketplace {
     mapping(address => uint256) public userFunds;
     mapping(uint256 => Collection) public collectionLedger;
     mapping(uint256 => MarketNft) public nftLedger;
-    mapping(address => uint256) private credits;
     mapping(address => uint256) private marketFee;
 
     struct Collection {
@@ -123,17 +122,14 @@ contract NFTMarketplace {
             'Sender has not to the owner of the NFT'
         );
 
-        nftLedger[_tokenId].forSale = true;
+        nftLedger[_tokenId].forSale = false;
 
         address payable ownerNft = payable(marketItem.ownerOf(_tokenId));
         ownerNft.transfer((msg.value - LISTING_FEE));
 
         marketItem.transferFrom(marketItem.ownerOf(_tokenId), msg.sender, _tokenId);
 
-        payable(msg.sender).transfer(msg.value);
-
         marketFee[marketItem.ownerOf(_tokenId)] += LISTING_FEE;
-        credits[marketItem.ownerOf(_tokenId)] += msg.value;
     }
 
     function cancelItem(uint256 _tokenId) external {
