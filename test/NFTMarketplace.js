@@ -4,8 +4,13 @@ const { expect } = require('chai');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
 describe('NFTMarketplace', function () {
+  const uri1 =
+    'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json';
+  const uri2 =
+    'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/2.json';
+
   async function deploy() {
-    const [owner, addr1] = await ethers.getSigners();
+    const [owner, addr1, addr2] = await ethers.getSigners();
 
     console.log('Deploying contracts with the account:', owner.address);
     console.log('Account balance:', (await owner.getBalance()).toString());
@@ -46,10 +51,7 @@ describe('NFTMarketplace', function () {
     it('Should set the right collection id ', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
-      await nftMarketplace.createMarketItem(
-        1,
-        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-      );
+      await nftMarketplace.createMarketItem(1, uri1);
       const nftLedger = await nftMarketplace.nftLedger(0);
 
       expect(await nftLedger.collectionId).to.equal(1);
@@ -57,10 +59,7 @@ describe('NFTMarketplace', function () {
     it('Should set nft forbidden for sale ', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
-      await nftMarketplace.createMarketItem(
-        1,
-        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-      );
+      await nftMarketplace.createMarketItem(1, uri1);
       const nftLedger = await nftMarketplace.nftLedger(0);
 
       expect(await nftLedger.forSale).to.equal(false);
@@ -68,10 +67,7 @@ describe('NFTMarketplace', function () {
     it('Should set the right price ', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
-      await nftMarketplace.createMarketItem(
-        1,
-        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-      );
+      await nftMarketplace.createMarketItem(1, uri1);
       const nftLedger = await nftMarketplace.nftLedger(0);
 
       expect(await nftLedger.price).to.equal(0);
@@ -79,13 +75,35 @@ describe('NFTMarketplace', function () {
     it('Should set the right token id  ', async function () {
       const { nftMarketplace, marketItem, owner } = await loadFixture(deploy);
 
-      await nftMarketplace.createMarketItem(
-        1,
-        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-      );
+      await nftMarketplace.createMarketItem(1, uri1);
 
       const nftLedger = await nftMarketplace.nftLedger(0);
       expect(nftLedger.tokenId).to.equal(0);
+    });
+
+    it('NFT is minted successfully', async function () {
+      const { marketItem, owner, addr1 } = await loadFixture(deploy);
+      expect(await marketItem.balanceOf(owner.address)).to.equal(0);
+
+      await marketItem.connect(owner).safeMint(addr1.address, uri1);
+      expect(await marketItem.balanceOf(owner.address)).to.equal(0);
+    });
+
+    it('uri is set sucessfully', async function () {
+      const { marketItem, owner, addr1 } = await loadFixture(deploy);
+
+      await marketItem.connect(owner).safeMint(addr1.address, uri1);
+      expect(await marketItem.tokenURI(0)).to.equal(uri1);
+    });
+  });
+
+  describe('setApproval', function () {
+    it('NFT is approved', async function () {
+      const { nftMarketplace, marketItem, addr1, addr2 } = await loadFixture(deploy);
+
+      await marketItem.safeMint(addr1.address, uri1);
+      await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
+      expect(await marketItem.getApproved(0)).to.equal(nftMarketplace.address);
     });
   });
 
@@ -138,10 +156,7 @@ describe('NFTMarketplace', function () {
     it('Should item be approved', async function () {
       const { nftMarketplace, marketItem, owner } = await loadFixture(deploy);
 
-      await nftMarketplace.createMarketItem(
-        1,
-        'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-      );
+      await nftMarketplace.createMarketItem(1, uri1);
 
       await marketItem.approve(nftMarketplace.address, 0);
 
@@ -161,12 +176,7 @@ describe('NFTMarketplace', function () {
     it('Should emit an event on MarketNftCreated', async function () {
       const { nftMarketplace } = await loadFixture(deploy);
 
-      await expect(
-        nftMarketplace.createMarketItem(
-          1,
-          'https://gateway.pinata.cloud/ipfs/QmYWjgERZxTsQaERz9aYTBQeS2FgTdAvnZMzV58FnkGrcs/1.json',
-        ),
-      )
+      await expect(nftMarketplace.createMarketItem(1, uri1))
         .to.emit(nftMarketplace, 'MarketNftCreated')
         .withArgs(anyValue, 1, anyValue, anyValue);
     });
