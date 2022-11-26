@@ -53,6 +53,13 @@ describe('NFTMarketplace', function () {
       await nftMarketplace.createCollection('bear');
       expect(await nftMarketplace.collectionLedger(1)).length.to.above(0);
     });
+    it('Array of collectionIds has to increase', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await nftMarketplace.createCollection('bear');
+      const count = await nftMarketplace.getCollectionIdsCount();
+      expect(count).to.equal(1);
+    });
   });
 
   describe('Create nft item', function () {
@@ -120,6 +127,14 @@ describe('NFTMarketplace', function () {
 
       await marketItem.connect(owner).safeMint(addr1.address, uri1);
       expect(await marketItem.tokenURI(0)).to.equal(uri1);
+    });
+
+    it('Array of nftIds has to increase', async function () {
+      const { nftMarketplace } = await loadFixture(deploy);
+
+      await nftMarketplace.createMarketItem(1, uri1);
+      const count = await nftMarketplace.getNftIdsCount();
+      expect(count).to.equal(1);
     });
   });
 
@@ -232,6 +247,19 @@ describe('NFTMarketplace', function () {
       await nftMarketplace.connect(addr2).buyItem(0, { value: ethers.utils.parseEther('1.0') });
 
       expect(await marketItem.ownerOf(0)).to.equal(addr2.address);
+    });
+
+    it('Should have enough funds', async function () {
+      const { nftMarketplace, marketItem, owner, addr1, addr2 } = await loadFixture(deploy);
+      const price = 4000;
+      await nftMarketplace.connect(addr1).createMarketItem(1, uri1);
+      await marketItem.safeMint(addr1.address, uri1);
+      await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
+
+      await nftMarketplace.connect(owner).listItem(0, price);
+      await nftMarketplace.connect(addr2).buyItem(0, { value: ethers.utils.parseEther('1.0') });
+
+      expect(1000000000000000000n).to.above(price);
     });
   });
 
