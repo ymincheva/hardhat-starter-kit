@@ -73,7 +73,8 @@ contract NFTMarketplace {
     }
 
     modifier IsForSale(uint256 _tokenId) {
-        require(nftLedger[_tokenId].forSale == true, 'Item is already listed to sale');
+        // require(nftLedger[_tokenId].forSale == true, 'Item is already listed to sale'); ????
+        require(nftLedger[_tokenId].forSale == false, 'Item is already listed to sale');
         _;
     }
 
@@ -110,7 +111,8 @@ contract NFTMarketplace {
         // - approval FE
 
         require(marketItem.ownerOf(_tokenId) != address(this), 'Only owner can list NFT');
-        require(marketItem.ownerOf(_tokenId) == address(0), 'Item has to be exist');
+        ///  require(marketItem.ownerOf(_tokenId) == address(0), 'Item has to be exist'); ?????
+        require(marketItem.ownerOf(_tokenId) != address(0), 'Item has to be exist');
 
         nftLedger[_tokenId].forSale = true;
         nftLedger[_tokenId].price = _price;

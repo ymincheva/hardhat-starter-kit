@@ -21,7 +21,7 @@ describe('NFTMarketplace', function () {
     const NFTMarketplace = await ethers.getContractFactory('NFTMarketplace');
     const nftMarketplace = await NFTMarketplace.deploy(marketItem.address);
 
-    return { nftMarketplace, marketItem, owner, addr1 };
+    return { nftMarketplace, marketItem, owner, addr1, addr2 };
   }
 
   describe('Deployment', function () {
@@ -99,7 +99,7 @@ describe('NFTMarketplace', function () {
 
   describe('setApproval', function () {
     it('NFT is approved', async function () {
-      const { nftMarketplace, marketItem, addr1, addr2 } = await loadFixture(deploy);
+      const { nftMarketplace, marketItem, addr1 } = await loadFixture(deploy);
 
       await marketItem.safeMint(addr1.address, uri1);
       await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
@@ -124,6 +124,32 @@ describe('NFTMarketplace', function () {
       expect(nftMarketplace.connect(owner).listItem(0, price)).to.be.revertedWith(
         'The price of NFT must be greater than 0',
       );
+    });
+
+    it('Should set the right price ', async function () {
+      const { marketItem, nftMarketplace, addr1 } = await loadFixture(deploy);
+
+      const price = 400000000000000;
+      await nftMarketplace.connect(addr1).createMarketItem(1, uri1);
+      await marketItem.safeMint(addr1.address, uri1);
+      await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
+      await nftMarketplace.listItem(0, price);
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      expect(await nftLedger.price).to.equal(price);
+    });
+
+    it('Should set nft for sale ', async function () {
+      const { marketItem, nftMarketplace, addr1 } = await loadFixture(deploy);
+
+      const price = 400000000000000;
+      await nftMarketplace.connect(addr1).createMarketItem(1, uri1);
+      await marketItem.safeMint(addr1.address, uri1);
+      await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
+      await nftMarketplace.listItem(0, price);
+      const nftLedger = await nftMarketplace.nftLedger(0);
+
+      expect(await nftLedger.forSale).to.equal(true);
     });
   });
 
@@ -154,13 +180,26 @@ describe('NFTMarketplace', function () {
     });
 
     it('Should item be approved', async function () {
-      const { nftMarketplace, marketItem, owner } = await loadFixture(deploy);
+      const { nftMarketplace, marketItem } = await loadFixture(deploy);
 
       await nftMarketplace.createMarketItem(1, uri1);
 
       await marketItem.approve(nftMarketplace.address, 0);
 
       expect(await marketItem.getApproved(0)).to.equal(nftMarketplace.address);
+    });
+
+    it('Should transfer token to the right address', async function () {
+      const { nftMarketplace, marketItem, owner, addr1, addr2 } = await loadFixture(deploy);
+      const price = 4000;
+      await nftMarketplace.connect(addr1).createMarketItem(1, uri1);
+      await marketItem.safeMint(addr1.address, uri1);
+      await marketItem.connect(addr1).approve(nftMarketplace.address, 0);
+
+      await nftMarketplace.connect(owner).listItem(0, price);
+      await nftMarketplace.connect(addr2).buyItem(0, { value: ethers.utils.parseEther('1.0') });
+
+      expect(await marketItem.ownerOf(0)).to.equal(addr2.address);
     });
   });
 
