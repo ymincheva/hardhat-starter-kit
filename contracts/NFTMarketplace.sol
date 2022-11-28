@@ -99,10 +99,6 @@ contract NFTMarketplace {
         emit MarketNftCreated(tokenId, _collectionId, 0, false);
     }
 
-    function setApproval(address _marketplaceContract, uint256 _tokenId) external {
-        marketItem.approve(_marketplaceContract, _tokenId);
-    }
-
     function listItem(uint256 _tokenId, uint256 _price)
         external
         IsForSale(_tokenId)
